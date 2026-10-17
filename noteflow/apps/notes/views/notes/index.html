@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1>Notes</h1>
+<p>Welcome, {{ current_user.username }}.</p>
+<p><a href="{{ url_for('notes.new') }}">Create a note</a></p>
+{% if notes %}
+<ul>
+    {% for note in notes %}
+    <li><a href="{{ url_for('notes.detail', id=note.id) }}">{{ note.title }}</a></li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>You have no notes yet.</p>
+{% endif %}
+{% endblock %}

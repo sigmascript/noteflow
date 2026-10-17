@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} | Aurora Next</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #f5f7fb;
+            color: #1e293b;
+            font: 1rem/1.6 system-ui, sans-serif;
+        }
+        .container { width: min(100% - 2rem, 52rem); margin: auto; }
+        header { background: white; border-bottom: 1px solid #dbe3ed; }
+        nav { display: flex; flex-wrap: wrap; gap: 1rem; padding: 1rem 0; }
+        a { color: #1d4ed8; text-underline-offset: 0.2em; }
+        a:focus-visible { outline: 2px solid #1d4ed8; outline-offset: 4px; }
+        main { padding: 2rem 0; }
+        label { display: block; margin: 1rem 0; }
+        input, textarea { display: block; width: 100%; padding: 0.65rem; font: inherit; }
+        .note-content { white-space: pre-wrap; overflow-wrap: anywhere; }
+        button { padding: 0.6rem 1rem; font: inherit; cursor: pointer; }
+        nav form { margin: 0; }
+        [role="alert"] { color: #991b1b; }
+        h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.2; }
+        footer { color: #475569; padding: 1rem 0; }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container" aria-label="Main navigation">
+            <a href="{{ url_for('home') }}">Free Notes</a>
+            <a href="{{ url_for('notes.index') }}">Notes</a>
+            {% if current_user %}
+            <span>{{ current_user.username }}</span>
+            <form method="post" action="{{ url_for('auth.signout') }}">
+                {{ csrf_field(request) }}
+                <button type="submit">Sign out</button>
+            </form>
+            {% else %}
+            <a href="{{ url_for('auth.signin') }}">Sign in</a>
+            <a href="{{ url_for('auth.signup') }}">Create account</a>
+            {% endif %}
+        </nav>
+    </header>
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="container">Built with Aurora Next.</footer>
+</body>
+</html>

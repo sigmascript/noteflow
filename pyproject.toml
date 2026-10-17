@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "noteflow-aurora-example"
+version = "0.1.0"
+description = "A reference notes application built with Aurora MVC"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "aurora-mvc==1.0.0a1",
+    "uvicorn>=0.30",
+]
+
+[tool.setuptools.packages.find]
+include = ["noteflow*"]
+
+[tool.setuptools.package-data]
+noteflow = ["**/*.html"]

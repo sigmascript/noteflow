@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1>Delete note</h1>
+<p>Delete “{{ note.title }}”? This cannot be undone.</p>
+<form method="post" action="{{ url_for('notes.delete', id=note.id) }}">
+    {{ csrf_field(request) }}
+    <button type="submit">Delete note</button>
+</form>
+<p><a href="{{ url_for('notes.detail', id=note.id) }}">Cancel</a></p>
+{% endblock %}
