@@ -1,6 +1,6 @@
 # NoteFlow
 
-**NoteFlow** is a small, independent notes application built with [Aurora MVC](https://github.com/sigmascript/aurora-mvc). It demonstrates authentication, server-rendered views, SQLite-backed models, sessions, CSRF protection, and per-user note ownership.
+**NoteFlow** Is a small, independent notes application built with [Aurora MVC](https://github.com/sigmascript/aurora-mvc). It demonstrates authentication, server-rendered views, SQLite-backed models, sessions, CSRF protection, and per-user note ownership.
 
 NoteFlow is a **GitHub-only reference application**, not part of the Aurora MVC framework package. It is **not published to PyPI**; the local `pyproject.toml` simply makes dependency installation convenient.
 
