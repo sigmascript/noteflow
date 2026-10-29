@@ -7,7 +7,7 @@ from http.cookies import SimpleCookie
 from pathlib import Path
 from urllib.parse import urlencode, urlsplit
 
-from aurora.database import Model
+from aurora.aurorasql import Model
 
 from noteflow.app import create_app
 from noteflow.database import configure_database, create_tables
@@ -94,20 +94,20 @@ class Browser:
 
 class NoteFlowIntegrationTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        self.previous_database = Model.database
         self.directory = tempfile.TemporaryDirectory(prefix="noteflow-test-")
         base = Path(self.directory.name)
-        self.database = configure_database(base / "notes.sqlite3")
+        self.database_path = base / "notes.sqlite3"
+        self.database = configure_database(self.database_path)
         create_tables(self.database)
         self.app = create_app(
-            session_database_path=base / "sessions.sqlite3", secure=False
+            session_database_path=base / "sessions.sqlite3",
+            notes_database_path=self.database_path, secure=False
         )
         self.alice = Browser(self.app)
         self.bob = Browser(self.app)
 
     def tearDown(self):
-        self.database.dispose()
-        Model.database = self.previous_database
+        self.database.close()
         self.directory.cleanup()
 
     async def register(self, browser, username):
@@ -213,7 +213,7 @@ class NoteFlowIntegrationTests(unittest.IsolatedAsyncioTestCase):
             "password": PASSWORD, "confirm": PASSWORD,
         })
         self.assertEqual(status, 403)
-        self.assertIsNone(User.read(where={"username": "alice"}).first())
+        self.assertIsNone(User.using(self.database).read(where={"username": "alice"}).first())
 
     async def test_old_csrf_rejected_after_authentication(self):
         old_token = await self.alice.form_token("/auth/signup")
@@ -222,7 +222,7 @@ class NoteFlowIntegrationTests(unittest.IsolatedAsyncioTestCase):
             "csrf_token": old_token, "title": "Blocked", "content": "Blocked",
         })
         self.assertEqual(status, 403)
-        self.assertEqual(Note.read(where={"title": "Blocked"}).all(), [])
+        self.assertEqual(Note.using(self.database).read(where={"title": "Blocked"}).all(), [])
 
     async def test_anonymous_post_with_csrf_is_forbidden(self):
         token = await self.alice.form_token("/auth/signup")

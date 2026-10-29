@@ -6,14 +6,6 @@ from aurora import validate
 from ..models import Note
 
 
-def note_values(data):
-    """Extract editable note fields from a submitted form."""
-    return {
-        "title": data.get("title", "").strip(),
-        "content": data.get("content", ""),
-    }
-
-
 def validate_note(values):
     """Return a human-readable validation error, or an empty string."""
     if validate(values, {"title": "required|max:200"}):

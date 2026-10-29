@@ -1,4 +1,4 @@
-from aurora.database import Model, column
+from aurora.aurorasql import Model, column
 
 
 class User(Model):

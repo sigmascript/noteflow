@@ -1,11 +1,12 @@
-"""GET and POST /auth/signin."""
+"""Handle GET and POST /auth/signin."""
 
 from aurora import Controller, View, redirect, url_for
-from aurora.security import protected_form, request_next, safe_next, redirect_local
+from aurora.security import csrf_token, protected_form, redirect_local, request_next, safe_next
 
 from ....helpers.auth import current_user_id, verify_credentials
 from ....models import User
-from ....helpers.session import sign_in
+
+from ....helpers.database_work import database_work
 
 
 class Signin(Controller):
@@ -27,7 +28,9 @@ class Signin(Controller):
 
         return_to = safe_next(data.get("next"), url_for("notes.index"))
         username = data.get("username", "").strip().lower()
-        user = User.read(where={"username": username}).first()
+        user = await database_work(
+            self.request, lambda connection: User.read(where={"username": username}).first()
+        )
 
         if not await verify_credentials(data.get("password", ""), user):
             return View(
@@ -39,5 +42,8 @@ class Signin(Controller):
                 next_url=return_to,
             )
 
-        await sign_in(self.request, user)
+        # Rotate the session identifier before storing the authenticated user.
+        await self.request.session.regenerate()
+        self.request.session["user_id"] = user.id
+        csrf_token(self.request)
         return redirect_local(return_to)

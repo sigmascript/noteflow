@@ -1,23 +1,12 @@
-from sqlalchemy import inspect
+"""Explicit initialization for a disposable NoteFlow AuroraSQL database."""
 
-from .database import DATABASE_PATH, configure_database, create_tables, Model
+from .database import DATABASE_PATH, configure_database, create_tables
 
 
-def main() -> None:
-    database = configure_database()
-    try:
-        expected = set(Model.metadata.tables)
-        before = set(inspect(database.engine).get_table_names())
+def main():
+    with configure_database() as database:
         create_tables(database)
-        after = set(inspect(database.engine).get_table_names())
-    finally:
-        database.dispose()
-
-    created = sorted((after - before) & expected)
-    if created:
-        print(f"NoteFlow tables created: {', '.join(created)} ({DATABASE_PATH})")
-    else:
-        print(f"NoteFlow database already initialized; no tables overwritten: {DATABASE_PATH}")
+    print(f"NoteFlow tables created: {DATABASE_PATH}")
 
 
 if __name__ == "__main__":

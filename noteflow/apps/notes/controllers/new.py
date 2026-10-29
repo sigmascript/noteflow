@@ -1,14 +1,15 @@
-"""GET and POST /notes/new."""
+"""Handle GET and POST /notes/new."""
 
 from datetime import datetime, timezone
 
-from aurora import Controller, redirect, url_for
-from aurora.security import protected_form, login_required
+from aurora import Controller, View, redirect, url_for
+from aurora.security import login_required, protected_form
 
 from ....helpers.auth import current_user_id, require_user
-from ....helpers.notes import note_values, validate_note
+from ....helpers.notes import validate_note
 from ....models import Note
-from ....helpers.form import note_form
+
+from ....helpers.database_work import database_work
 
 
 class NewNote(Controller):
@@ -20,7 +21,8 @@ class NewNote(Controller):
         with_next=True,
     )
     def get(self):
-        return note_form(
+        return View(
+            "notes/form",
             title="New note",
             action=url_for("notes.new"),
             values={"title": "", "content": ""},
@@ -29,11 +31,15 @@ class NewNote(Controller):
     async def post(self):
         data = await protected_form(self.request)
         user_id = require_user(self.request)
-        values = note_values(data)
+        values = {
+            "title": data.get("title", "").strip(),
+            "content": data.get("content", ""),
+        }
         error = validate_note(values)
 
         if error:
-            return note_form(
+            return View(
+                "notes/form",
                 title="New note",
                 action=url_for("notes.new"),
                 values=values,
@@ -41,9 +47,12 @@ class NewNote(Controller):
                 status_code=400,
             )
 
-        note = Note.create(
-            user_id=user_id,
-            **values,
-            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+        note = await database_work(
+            self.request,
+            lambda connection: Note.create(
+                user_id=user_id,
+                **values,
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            ),
         )
         return redirect(url_for("notes.detail", id=note.id))

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from aurora.database import Model, column
+from aurora.aurorasql import Model, column
 
 
 class Note(Model):

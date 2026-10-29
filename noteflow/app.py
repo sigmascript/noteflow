@@ -9,10 +9,11 @@ from .apps.notes.controllers import (
     Notes, NewNote, NoteDetail, EditNote, DeleteNote,
 )
 from .presentation import VIEW_DIRECTORIES, view_context
-from .database import configure_database
+from .database import configure_database, database_url
+from .helpers.database_work import create_database_runner
 
 
-def create_app(*, session_database_path, secure=True):
+def create_app(*, session_database_path, secure=True, notes_database_path=None):
     """Build the migrated app with explicit session storage configuration."""
     app = Aurora(
         views_directory=VIEW_DIRECTORIES,
@@ -22,6 +23,17 @@ def create_app(*, session_database_path, secure=True):
             database_path=str(session_database_path), secure=secure,
         ),
     )
+
+    # The session and HTTP lifecycle remain on the event loop. Only complete
+    # synchronous database callbacks execute on worker-owned connections.
+    notes_url = database_url(notes_database_path) if notes_database_path else database_url()
+    database_work = create_database_runner(notes_url, max_concurrent=4)
+
+    async def database_scope(request, call_next):
+        request.scope["noteflow.database_work"] = database_work
+        return await call_next(request)
+
+    app.add_middleware(database_scope)
 
     def home(request):
         return View("home", title="NoteFlow")
@@ -46,5 +58,4 @@ def create_app(*, session_database_path, secure=True):
 # create_app() itself does not bind models or create application tables.
 # Use secure=True for HTTPS deployments.
 LOCAL_SESSION_DATABASE = Path(__file__).resolve().parent / "noteflow_sessions.sqlite3"
-_database = configure_database()
 app = create_app(session_database_path=LOCAL_SESSION_DATABASE, secure=False)
